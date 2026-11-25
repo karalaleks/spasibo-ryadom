@@ -20,15 +20,82 @@ function makeList(entries, className, renderEntry) {
   return list;
 }
 
+const dativeNames = new Map();
+const namesByGender = {
+  female: `Александра:Александре Алёна:Алёне Алена:Алене Алина:Алине Алиса:Алисе Алла:Алле Анастасия:Анастасии
+    Ангелина:Ангелине Анна:Анне Антонина:Антонине Валентина:Валентине Валерия:Валерии Варвара:Варваре
+    Василиса:Василисе Вера:Вере Вероника:Веронике Виктория:Виктории Галина:Галине Дарья:Дарье Диана:Диане
+    Дина:Дине Евгения:Евгении Екатерина:Екатерине Елена:Елене Елизавета:Елизавете Жанна:Жанне
+    Зинаида:Зинаиде Злата:Злате Зоя:Зое Инна:Инне Ирина:Ирине Карина:Карине Кира:Кире Кристина:Кристине
+    Ксения:Ксении Лариса:Ларисе Лидия:Лидии Лилия:Лилии Любовь:Любови Людмила:Людмиле Майя:Майе
+    Маргарита:Маргарите Марина:Марине Мария:Марии Милана:Милане Надежда:Надежде Наталия:Наталии
+    Наталья:Наталье Нина:Нине Оксана:Оксане Олеся:Олесе Ольга:Ольге Полина:Полине Раиса:Раисе
+    Регина:Регине Светлана:Светлане София:Софии Софья:Софье Тамара:Тамаре Татьяна:Татьяне Ульяна:Ульяне
+    Элина:Элине Эльвира:Эльвире Эльнара:Эльнаре Юлия:Юлии Яна:Яне
+    Аня:Ане Даша:Даше Катя:Кате Лена:Лене Маша:Маше Наташа:Наташе Оля:Оле Света:Свете Таня:Тане Юля:Юле`,
+  male: `Александр:Александру Алексей:Алексею Анатолий:Анатолию Андрей:Андрею Антон:Антону Аркадий:Аркадию
+    Арсений:Арсению Артём:Артёму Артем:Артему Артур:Артуру Борис:Борису Вадим:Вадиму Валентин:Валентину
+    Валерий:Валерию Василий:Василию Виктор:Виктору Виталий:Виталию Владимир:Владимиру Владислав:Владиславу
+    Вячеслав:Вячеславу Геннадий:Геннадию Георгий:Георгию Глеб:Глебу Григорий:Григорию Даниил:Даниилу
+    Данил:Данилу Денис:Денису Дмитрий:Дмитрию Евгений:Евгению Егор:Егору Иван:Ивану Игорь:Игорю
+    Илья:Илье Кирилл:Кириллу Константин:Константину Лев:Льву Леонид:Леониду Максим:Максиму
+    Матвей:Матвею Михаил:Михаилу Никита:Никите Николай:Николаю Олег:Олегу Павел:Павлу Пётр:Петру
+    Петр:Петру Роман:Роману Руслан:Руслану Семён:Семёну Семен:Семену Сергей:Сергею Станислав:Станиславу
+    Степан:Степану Тимофей:Тимофею Фёдор:Фёдору Федор:Федору Юрий:Юрию Ярослав:Ярославу
+    Дима:Диме Коля:Коле Лёша:Лёше Леша:Леше Миша:Мише Паша:Паше Петя:Пете
+    Серёжа:Серёже Сережа:Сереже Тёма:Тёме`,
+};
+for (const [gender, entries] of Object.entries(namesByGender)) {
+  for (const pair of entries.split(/\s+/)) {
+    const [given, dative] = pair.toLowerCase().split(":");
+    dativeNames.set(given, { dative, gender });
+  }
+}
+dativeNames.set("саша", { dative: "саше" });
+dativeNames.set("женя", { dative: "жене" });
+dativeNames.set("валя", { dative: "вале" });
+
+function preserveCapitalization(source, inflected) {
+  if (source === source.toUpperCase()) return inflected.toUpperCase();
+  if (source[0] === source[0].toUpperCase()) return inflected[0].toUpperCase() + inflected.slice(1);
+  return inflected;
+}
+
+function inflectNamePart(part, gender) {
+  const lower = part.toLowerCase();
+  const endings = gender === "female"
+    ? [[/(?:ова|ева|ёва|ина|ына)$/, "ой", 1], [/(?:ская|цкая)$/, "ой", 2], [/(?:овна|евна|ёвна|инична|ична)$/, "е", 1]]
+    : [[/(?:ский|цкий)$/, "ому", 2], [/(?:ов|ев|ёв|ин|ын|вич)$/, "у", 0]];
+  const ending = endings.find(([pattern]) => pattern.test(lower));
+  if (!ending) return part;
+  const [, suffix, trim] = ending;
+  return preserveCapitalization(part, lower.slice(0, lower.length - trim) + suffix);
+}
+
+function recipientTitle(recipient) {
+  const parts = recipient.trim().split(/\s+/);
+  if (parts.length > 3 || !parts.every(part => /^[а-яё]+(?:-[а-яё]+)*\.?$/iu.test(part))) return recipient;
+  const knownNames = parts.map(part => dativeNames.get(part.toLowerCase()));
+  const nameIndex = knownNames.findIndex(Boolean);
+  if (nameIndex === -1) return recipient;
+  if (knownNames.filter(Boolean).length > 1) return recipient;
+  const name = knownNames[nameIndex];
+  return parts.map((part, index) => {
+    if (index === nameIndex) return preserveCapitalization(part, name.dative);
+    if (!name.gender) return part;
+    return part.split("-").map(word => inflectNamePart(word, name.gender)).join("-");
+  }).join(" ");
+}
+
 function showMessages(messages) {
   if (!Array.isArray(messages)) return;
   const publishableMessages = messages.filter(entry => entry?.to && entry?.text);
   if (!publishableMessages.length) return;
   const list = makeList(publishableMessages, "message-list", (item, entry) => {
-    item.append(
-      element("h3", entry.to, "card-heading"),
-      element("p", entry.text, "message-text"),
-    );
+    const header = element("header");
+    header.append(element("h3", recipientTitle(entry.to), "card-heading"));
+    if (entry.unit) header.append(element("p", entry.unit, "recipient-unit"));
+    item.append(header, element("p", entry.text, "message-text"));
     if (entry.from) item.append(element("p", `От кого: ${entry.from}`, "byline"));
   });
   messagesContainer.replaceChildren(list);
@@ -114,17 +181,18 @@ function parsePublicFeed(csv) {
     }
   }
 
-  if (consumed !== source.length || rows.some(row => row.length !== 3)) {
+  const header = rows.shift();
+  const legacyHeader = "Кому,От кого,Благодарность";
+  if (![legacyHeader, legacyHeader + ",Аптека или подразделение"].includes(header?.join(","))) {
+    throw new Error("The gratitude feed returned an unexpected header");
+  }
+  if (consumed !== source.length || rows.some(row => row.length < 3 || row.length > header.length)) {
     throw new Error("The gratitude feed returned an incomplete CSV");
   }
 
-  const header = rows.shift();
-  if (header?.join(",") !== "Кому,От кого,Благодарность") {
-    throw new Error("The gratitude feed returned an unexpected header");
-  }
   return rows.reverse()
-    .filter(row => row.every(value => value.trim()))
-    .map(([to, from, text]) => ({ to, from, text }));
+    .filter(row => row.slice(0, 3).every(value => value.trim()))
+    .map(([to, from, text, unit = ""]) => ({ to, from, text, unit: unit.trim() }));
 }
 
 function feedIsRecent(feed) {

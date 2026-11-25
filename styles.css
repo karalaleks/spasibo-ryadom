@@ -121,12 +121,13 @@ h1 {
   line-height: .9;
   letter-spacing: -.065em;
 }
-h1 em {
+h1 span {
   display: block;
-  margin-top: .2rem;
+  margin-top: .16em;
   color: var(--accent);
-  font-size: 1.075em;
+  font-size: .96em;
   font-weight: 400;
+  letter-spacing: -.045em;
 }
 .hero-description {
   max-width: 37ch;
@@ -328,6 +329,12 @@ h2 {
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: -.02em;
+}
+.recipient-unit {
+  margin: .3rem 0 0;
+  color: var(--muted);
+  font-size: .9375rem;
+  line-height: 1.4;
 }
 .message-text {
   margin: 0;
