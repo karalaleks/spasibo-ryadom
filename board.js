@@ -26,10 +26,10 @@ function showMessages(messages) {
   if (!publishableMessages.length) return;
   const list = makeList(publishableMessages, "message-list", (item, entry) => {
     item.append(
-      element("h3", entry.to, "card-heading"),
+      element("h3", entry.from ? `Кому: ${entry.to}` : entry.to, "card-heading"),
       element("p", entry.text, "message-text"),
     );
-    if (entry.from) item.append(element("p", entry.from, "byline"));
+    if (entry.from) item.append(element("p", `От кого: ${entry.from}`, "byline"));
   });
   document.getElementById("messages").replaceChildren(list);
 }
@@ -79,17 +79,65 @@ if (!campaignEnded && typeof formDialog.showModal === "function") {
   });
 }
 
-fetch("results.json", { cache: "no-cache" })
-  .then(response => {
-    if (!response.ok) throw new Error("Could not load the gratitude board");
-    return response.json();
-  })
-  .then(results => {
-    if (!results) return;
-    showMessages(results.messages);
-    if (campaignEnded) showClosingDetails(results);
-  })
-  .catch(() => {
-    const emptyMessage = document.getElementById("board-empty");
-    if (emptyMessage) emptyMessage.textContent = "Благодарности не загрузились. Попробуйте обновить страницу.";
-  });
+const publicFeedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRfgxCn2Dr7pyyqJHCTD3zANs1CPolL4Ve9H2PkBSkCUc5P1-OtGkilOW3GmGX_8hb36jQC-3GqmdI7/pub?gid=873401514&single=true&output=csv";
+const localResults = fetch("results.json", { cache: "no-cache" })
+  .then(response => response.ok ? response.json() : null)
+  .catch(() => null);
+let publicMessages = [];
+let boardRefreshing = false;
+
+function parsePublicFeed(csv) {
+  const rows = [];
+  let row = [];
+  const fields = /("(?:[^"]|"")*"|[^",\r\n]*)(,|\r\n|\n|\r|$)/gy;
+  for (const [, raw, separator] of csv.replace(/^\uFEFF/, "").matchAll(fields)) {
+    row.push(raw.startsWith('"') ? raw.slice(1, -1).replace(/""/g, '"') : raw);
+    if (separator !== ",") {
+      if (row.some(value => value.trim())) rows.push(row);
+      row = [];
+    }
+  }
+
+  const header = rows.shift();
+  if (header?.join(",") !== "Кому,От кого,Благодарность") {
+    throw new Error("The gratitude feed returned an unexpected header");
+  }
+  return rows.reverse()
+    .filter(row => row.length === 3 && row.every(value => value.trim()))
+    .map(([to, from, text]) => ({ to, from, text }));
+}
+
+async function refreshBoard() {
+  if (boardRefreshing) return;
+  boardRefreshing = true;
+  try {
+    const response = await fetch(publicFeedUrl, {
+      cache: "no-store",
+      credentials: "omit",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) throw new Error("Could not load the public gratitude feed");
+    publicMessages = parsePublicFeed(await response.text());
+  } catch (error) {
+    console.warn("Публичная лента благодарностей временно недоступна.", error);
+  } finally {
+    boardRefreshing = false;
+  }
+  const results = await localResults;
+  showMessages([...publicMessages, ...(results?.messages ?? [])]);
+}
+
+localResults.then(results => {
+  if (!results) return;
+  showMessages([...publicMessages, ...(results.messages ?? [])]);
+  if (campaignEnded) showClosingDetails(results);
+});
+
+refreshBoard();
+formDialog.addEventListener("close", refreshBoard);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshBoard();
+});
+setInterval(() => {
+  if (!document.hidden) refreshBoard();
+}, 30000);
