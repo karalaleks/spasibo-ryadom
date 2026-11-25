@@ -20,7 +20,7 @@ function makeList(entries, className, renderEntry) {
   return list;
 }
 
-const dativeNames = new Map();
+const givenNames = new Map();
 const namesByGender = {
   female: `Александра:Александре Алёна:Алёне Алена:Алене Алина:Алине Алиса:Алисе Алла:Алле Анастасия:Анастасии
     Ангелина:Ангелине Анна:Анне Антонина:Антонине Валентина:Валентине Валерия:Валерии Варвара:Варваре
@@ -48,12 +48,12 @@ const namesByGender = {
 for (const [gender, entries] of Object.entries(namesByGender)) {
   for (const pair of entries.split(/\s+/)) {
     const [given, dative] = pair.toLowerCase().split(":");
-    dativeNames.set(given, { dative, gender });
+    givenNames.set(given, { dative, gender });
   }
 }
-dativeNames.set("саша", { dative: "саше" });
-dativeNames.set("женя", { dative: "жене" });
-dativeNames.set("валя", { dative: "вале" });
+givenNames.set("саша", { dative: "саше" });
+givenNames.set("женя", { dative: "жене" });
+givenNames.set("валя", { dative: "вале" });
 
 function preserveCapitalization(source, inflected) {
   if (source === source.toUpperCase()) return inflected.toUpperCase();
@@ -61,29 +61,51 @@ function preserveCapitalization(source, inflected) {
   return inflected;
 }
 
-function inflectNamePart(part, gender) {
+function genitiveGivenName(given, dative) {
+  if (given.endsWith("а")) {
+    const stem = given.slice(0, -1);
+    return stem + (/[гкхжчшщ]$/.test(stem) ? "и" : "ы");
+  }
+  if (given.endsWith("я")) return given.slice(0, -1) + "и";
+  if (dative.endsWith("у")) return dative.slice(0, -1) + "а";
+  if (dative.endsWith("ю")) return dative.slice(0, -1) + "я";
+  return dative;
+}
+
+const familyNameEndings = {
+  female: [
+    [/(?:ова|ева|ёва|ина|ына)$/, 1, "ой", "ой"],
+    [/(?:ская|цкая)$/, 2, "ой", "ой"],
+    [/(?:овна|евна|ёвна|инична|ична)$/, 1, "е", "ы"],
+  ],
+  male: [
+    [/(?:ский|цкий)$/, 2, "ому", "ого"],
+    [/(?:ов|ев|ёв|ин|ын|вич)$/, 0, "у", "а"],
+  ],
+};
+
+function inflectFamilyNamePart(part, gender, nameCase) {
   const lower = part.toLowerCase();
-  const endings = gender === "female"
-    ? [[/(?:ова|ева|ёва|ина|ына)$/, "ой", 1], [/(?:ская|цкая)$/, "ой", 2], [/(?:овна|евна|ёвна|инична|ична)$/, "е", 1]]
-    : [[/(?:ский|цкий)$/, "ому", 2], [/(?:ов|ев|ёв|ин|ын|вич)$/, "у", 0]];
-  const ending = endings.find(([pattern]) => pattern.test(lower));
+  const ending = familyNameEndings[gender].find(([pattern]) => pattern.test(lower));
   if (!ending) return part;
-  const [, suffix, trim] = ending;
+  const [, trim, dative, genitive] = ending;
+  const suffix = nameCase === "genitive" ? genitive : dative;
   return preserveCapitalization(part, lower.slice(0, lower.length - trim) + suffix);
 }
 
-function recipientTitle(recipient) {
-  const parts = recipient.trim().split(/\s+/);
-  if (parts.length > 3 || !parts.every(part => /^[а-яё]+(?:-[а-яё]+)*\.?$/iu.test(part))) return recipient;
-  const knownNames = parts.map(part => dativeNames.get(part.toLowerCase()));
+function inflectPersonName(personName, nameCase) {
+  const parts = personName.trim().split(/\s+/);
+  if (parts.length > 3 || !parts.every(part => /^[а-яё]+(?:-[а-яё]+)*\.?$/iu.test(part))) return personName;
+  const knownNames = parts.map(part => givenNames.get(part.toLowerCase()));
+  if (knownNames.filter(Boolean).length !== 1) return personName;
   const nameIndex = knownNames.findIndex(Boolean);
-  if (nameIndex === -1) return recipient;
-  if (knownNames.filter(Boolean).length > 1) return recipient;
   const name = knownNames[nameIndex];
+  const given = parts[nameIndex].toLowerCase();
+  const inflected = nameCase === "genitive" ? genitiveGivenName(given, name.dative) : name.dative;
   return parts.map((part, index) => {
-    if (index === nameIndex) return preserveCapitalization(part, name.dative);
+    if (index === nameIndex) return preserveCapitalization(part, inflected);
     if (!name.gender) return part;
-    return part.split("-").map(word => inflectNamePart(word, name.gender)).join("-");
+    return part.split("-").map(word => inflectFamilyNamePart(word, name.gender, nameCase)).join("-");
   }).join(" ");
 }
 
@@ -93,10 +115,10 @@ function showMessages(messages) {
   if (!publishableMessages.length) return;
   const list = makeList(publishableMessages, "message-list", (item, entry) => {
     const header = element("header");
-    header.append(element("h3", recipientTitle(entry.to), "card-heading"));
+    header.append(element("h3", inflectPersonName(entry.to, "dative"), "card-heading"));
     if (entry.unit) header.append(element("p", entry.unit, "recipient-unit"));
     item.append(header, element("p", entry.text, "message-text"));
-    if (entry.from) item.append(element("p", `От кого: ${entry.from}`, "byline"));
+    if (entry.from) item.append(element("p", `От кого: ${inflectPersonName(entry.from, "genitive")}`, "byline"));
   });
   messagesContainer.replaceChildren(list);
 }
