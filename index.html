@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#fcf8f0">
   <title>Спасибо рядом · Экономная Аптека</title>
   <link rel="icon" href="assets/emblem.webp">
-  <link rel="stylesheet" href="styles.css?v=recipient">
+  <link rel="stylesheet" href="styles.css?v=warmth">
   <script src="board.js?v=recipient" defer></script>
 </head>
 <body>
@@ -24,12 +24,12 @@
     <section class="hero shell" aria-labelledby="hero-title">
       <div class="hero-copy">
         <p class="campaign-dates"><time datetime="2026-11-25">25 ноября</time> — <time datetime="2026-12-08">8 декабря</time></p>
-        <h1 id="hero-title">Спасибо <span>рядом</span></h1>
+        <h1 id="hero-title">Спасибо <span class="hero-nearby">рядом <span class="hero-heart" aria-hidden="true"><img src="assets/heart.svg" width="20" height="20" alt=""></span></span></h1>
         <div id="campaign-invitation">
           <p class="hero-description">Вспомните коллегу из другого подразделения, который вас выручил. Расскажите ему, что это для вас значило.</p>
           <a class="action" id="open-form" href="https://docs.google.com/forms/d/e/1FAIpQLSeJHe-bdYkclfRYNxIURqIpyBDkQPjEaVNk2D4NdEyB5FhaDA/viewform" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 20" fill="none" width="22" height="19" aria-hidden="true"><rect x="1" y="1" width="22" height="18" rx="3"/><path d="m2 3 10 8L22 3"/></svg>
-            Написать спасибо
+            Написать благодарность
           </a>
           <p class="privacy-choice">Можно поделиться на доске или передать лично.</p>
         </div>
@@ -57,7 +57,7 @@
           <div class="board-actions" id="board-actions">
             <a class="action" id="open-form-bottom" href="https://docs.google.com/forms/d/e/1FAIpQLSeJHe-bdYkclfRYNxIURqIpyBDkQPjEaVNk2D4NdEyB5FhaDA/viewform" target="_blank" rel="noopener noreferrer">
               <svg viewBox="0 0 24 20" fill="none" width="22" height="19" aria-hidden="true"><rect x="1" y="1" width="22" height="18" rx="3"/><path d="m2 3 10 8L22 3"/></svg>
-              Написать спасибо
+              Написать благодарность
             </a>
           </div>
         </section>
@@ -73,7 +73,7 @@
   </main>
   <dialog class="form-dialog" id="form-dialog" aria-labelledby="form-dialog-title">
     <header class="form-dialog-head">
-      <h2 id="form-dialog-title">Написать спасибо</h2>
+      <h2 id="form-dialog-title">Написать благодарность</h2>
       <form method="dialog">
         <button class="form-close" type="submit" aria-label="Закрыть форму" autofocus>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>

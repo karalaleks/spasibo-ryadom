@@ -15,10 +15,10 @@
   color-scheme: light;
   --ink: #17382a;
   --muted: #526254;
-  --accent: #aa4a21;
-  --orange: #ff8200;
-  --cream: #fffaf0;
-  --canvas: #fbf7ef;
+  --accent: #a3472a;
+  --orange: #f79539;
+  --cream: #fff8ed;
+  --canvas: #fcf5e9;
   font-family: "Noto Display", Arial, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -49,7 +49,7 @@ h1, h2, h3, p { overflow-wrap: anywhere; }
 }
 .skip-link:focus { transform: translateY(0); }
 
-.site-header { background: #fcf8f0; border-bottom: 1px solid #ede2d5; }
+.site-header { background: #fcf6ec; border-bottom: 1px solid #eee1d3; }
 .header-content {
   min-height: 5.5rem;
   display: flex;
@@ -78,10 +78,10 @@ nav a:hover { color: var(--accent); text-decoration: underline; text-underline-o
   overflow: hidden;
   border-radius: 1.75rem;
   background:
-    linear-gradient(#fff7eb7d, #fff7eb7d),
+    linear-gradient(115deg, #fff4e487, #fff0d776),
     url("assets/paper-grain.webp"),
-    radial-gradient(ellipse at 69% 4%, #f4dfb8, transparent 70%),
-    #fff8ec;
+    radial-gradient(ellipse at 69% 4%, #f4dbb2, transparent 70%),
+    var(--cream);
   box-shadow:
     0 1.25rem 3.5rem -.75rem #4e392b26,
     0 .25rem .875rem -.4rem #4e392b2e;
@@ -121,13 +121,31 @@ h1 {
   line-height: .9;
   letter-spacing: -.065em;
 }
-h1 span {
-  display: block;
+.hero-nearby {
+  display: flex;
+  align-items: center;
+  gap: .17em;
   margin-top: .16em;
   color: var(--accent);
   font-size: .96em;
   font-weight: 400;
   letter-spacing: -.045em;
+}
+.hero-heart {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: .43em;
+  aspect-ratio: 1;
+  border: 1px solid #d6937773;
+  border-radius: 50%;
+  background: #f7dec8;
+  box-shadow: inset 0 1px #fff7e4, 0 .035em .1em #ad633729;
+  transform: rotate(-10deg);
+}
+.hero-heart img {
+  inline-size: 62%;
+  block-size: auto;
 }
 .hero-description {
   max-width: 37ch;
@@ -141,20 +159,21 @@ h1 span {
   align-items: center;
   justify-content: center;
   min-height: 3.6rem;
+  max-inline-size: 100%;
   gap: .75rem;
   padding: .8rem 1.35rem;
   border-radius: .75rem;
   border: 1px solid #b95b1829;
-  background: linear-gradient(#ff9c28, var(--orange));
+  background: linear-gradient(#ffb563, var(--orange));
   color: #241508;
   box-shadow: inset 0 1px #ffc6759c, 0 .3rem .75rem -.12rem #a9592450;
-  font-size: 1.1875rem;
+  font-size: clamp(1.0625rem, 2vw, 1.1875rem);
   font-weight: 700;
   text-align: center;
   text-decoration: none;
 }
 .action:hover {
-  background: linear-gradient(#ffad43, #ff8b10);
+  background: linear-gradient(#ffc176, #f9a247);
   box-shadow: inset 0 1px #ffd58a9c, 0 .35rem .9rem -.12rem #a9592460;
 }
 .action svg, .empty svg, .closing-mark {
@@ -202,7 +221,7 @@ body:has(.form-dialog[open]) { overflow: hidden; }
   gap: .15rem 1rem;
   padding: .8rem 1.25rem 1rem;
   border-bottom: 1px solid #eadbc5;
-  background: linear-gradient(105deg, #fff8eb, #f3eedf);
+  background: linear-gradient(105deg, #fff8eb, #f8e7d4);
 }
 .form-dialog-head h2 { margin: 0; font-size: clamp(1.35rem, 2.8vw, 1.8rem); }
 .form-close {
@@ -242,8 +261,9 @@ body:has(.form-dialog[open]) { overflow: hidden; }
   z-index: -1;
   inset: 0;
   background:
-    radial-gradient(ellipse at 85% 42%, #d8e9dd, transparent 72%),
-    linear-gradient(#e6eee1, #e9efe2 62%, #f7f1e6);
+    radial-gradient(ellipse at 10% 30%, #fae5d2b3, transparent 59%),
+    radial-gradient(ellipse at 86% 36%, #e1e8d8, transparent 67%),
+    linear-gradient(#f5ecde, #f3ebdc 62%, var(--canvas));
   mask-image: linear-gradient(transparent, #000 calc(var(--overlap) + 3rem));
   pointer-events: none;
 }
@@ -300,8 +320,8 @@ h2 {
   background: #fffbf1;
   box-shadow: inset 0 1px #ffffff80, 0 .6rem 1.35rem -.55rem #5f482733;
 }
-.message-list li:nth-child(3n + 2) { border-color: #c8dfd0; background: #e2eee3; }
-.message-list li:nth-child(3n + 3) { border-color: #edd3bf; background: #f7e5d5; }
+.message-list li:nth-child(3n + 2) { border-color: #d6ddca; background: #e9eedf; }
+.message-list li:nth-child(3n + 3) { border-color: #ecd1bd; background: #fae7d8; }
 .message-list li::after {
   content: "";
   position: absolute;
