@@ -26,7 +26,7 @@ function showMessages(messages) {
   if (!publishableMessages.length) return;
   const list = makeList(publishableMessages, "message-list", (item, entry) => {
     item.append(
-      element("h3", entry.from ? `Кому: ${entry.to}` : entry.to, "card-heading"),
+      element("h3", entry.to, "card-heading"),
       element("p", entry.text, "message-text"),
     );
     if (entry.from) item.append(element("p", `От кого: ${entry.from}`, "byline"));
@@ -53,30 +53,33 @@ function showClosingDetails({ total, stories }) {
 
 if (campaignEnded) {
   document.getElementById("campaign-invitation").hidden = true;
+  document.getElementById("board-actions").hidden = true;
   document.getElementById("campaign-ended").hidden = false;
   document.getElementById("closing-card").hidden = false;
   document.getElementById("board-empty").textContent = "На доске пока нет опубликованных благодарностей.";
 }
 
-const openForm = document.getElementById("open-form");
 const formDialog = document.getElementById("form-dialog");
 const formFrame = document.getElementById("form-frame");
 
 if (!campaignEnded && typeof formDialog.showModal === "function") {
-  openForm.setAttribute("aria-haspopup", "dialog");
-  openForm.setAttribute("aria-controls", formDialog.id);
-  openForm.addEventListener("click", event => {
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    if (!formFrame.hasAttribute("src")) {
-      const url = new URL(openForm.href);
-      url.searchParams.set("embedded", "true");
-      url.searchParams.set("hl", "ru");
-      formFrame.src = url.href;
-    }
+  for (const id of ["open-form", "open-form-bottom"]) {
+    const link = document.getElementById(id);
+    link.setAttribute("aria-haspopup", "dialog");
+    link.setAttribute("aria-controls", formDialog.id);
+    link.addEventListener("click", event => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (!formFrame.hasAttribute("src")) {
+        const url = new URL(link.href);
+        url.searchParams.set("embedded", "true");
+        url.searchParams.set("hl", "ru");
+        formFrame.src = url.href;
+      }
 
-    formDialog.showModal();
-  });
+      formDialog.showModal();
+    });
+  }
 }
 
 const publicFeedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRfgxCn2Dr7pyyqJHCTD3zANs1CPolL4Ve9H2PkBSkCUc5P1-OtGkilOW3GmGX_8hb36jQC-3GqmdI7/pub?gid=873401514&single=true&output=csv";

@@ -314,21 +314,45 @@ h2 {
   transform: rotate(-11deg);
   pointer-events: none;
 }
+.message-list li {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+  min-height: 11.5rem;
+  padding: clamp(1.2rem, 2.6vw, 1.85rem);
+}
 .card-heading {
-  margin: 0 2.7rem .8rem 0;
-  color: var(--muted);
-  font-size: .875rem;
+  margin: 0 2.85rem 0 0;
+  color: var(--ink);
+  font-size: clamp(1.375rem, 2vw, 1.7rem);
   font-weight: 700;
-  letter-spacing: .03em;
+  line-height: 1.18;
+  letter-spacing: -.02em;
 }
 .message-text {
   margin: 0;
-  font-size: clamp(1.125rem, 1.7vw, 1.45rem);
-  line-height: 1.42;
+  font-size: clamp(1.0625rem, 1.45vw, 1.25rem);
+  line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.byline { margin: .85rem 0 0; color: var(--muted); line-height: 1.42; }
+.byline {
+  margin: auto 0 0;
+  padding-block-start: .75rem;
+  border-top: 1px solid #17382a20;
+  color: var(--muted);
+  font-size: .9375rem;
+  line-height: 1.42;
+}
+.board-actions {
+  display: flex;
+  justify-content: center;
+  margin-block-start: clamp(1.35rem, 3.25vw, 2.5rem);
+}
+.board-actions .action {
+  min-height: 3.15rem;
+  font-size: 1.0625rem;
+}
 .closing-card {
   margin: 0 1.25rem 3.75rem;
   padding: clamp(1.4rem, 4.2vw, 3.25rem);
@@ -372,5 +396,7 @@ h2 {
   }
   .form-dialog-head { padding: .6rem .8rem .85rem; }
   .message-list, .story-list { grid-template-columns: minmax(0, 1fr); }
+  .message-list li { min-height: auto; }
+  .board-actions .action { width: min(100%, 20rem); }
   .empty { padding: 1rem; }
 }
