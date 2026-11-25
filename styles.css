@@ -193,8 +193,8 @@ h1 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: right center;
-  mask-image: linear-gradient(90deg, transparent 1%, #000 26%);
+  object-position: center;
+  mask-image: linear-gradient(90deg, transparent 1%, #000 20%);
 }
 
 .form-dialog {
@@ -400,17 +400,20 @@ h2 {
 @media (max-width: 1080px) {
   .shell { width: calc(100% - 4rem); }
   .hero-copy { padding-inline: 2rem; }
+  .hero-art img { mask-image: linear-gradient(90deg, transparent 1%, #000 11%); }
 }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .shell { width: calc(100% - 2rem); }
-  .header-content { min-height: 4.6rem; padding-inline: .25rem; }
-  .brand { width: 8.2rem; }
-  nav a { font-size: .95rem; }
   .hero { grid-template-columns: 1fr; margin-top: 1rem; border-radius: 1.25rem; }
   .hero-copy { padding: clamp(1.25rem, 6vw, 3rem); }
   h1 { font-size: clamp(3.45rem, 11vw, 6rem); }
   .hero-art { aspect-ratio: 1.15; margin: -.65rem 0 0; }
   .hero-art img { object-position: center; mask-image: linear-gradient(180deg, transparent, #000 21%); }
+}
+@media (max-width: 800px) {
+  .header-content { min-height: 4.6rem; padding-inline: .25rem; }
+  .brand { width: 8.2rem; }
+  nav a { font-size: .95rem; }
   .board { padding-inline: .2rem; }
   .closing-card { margin-inline: .2rem; }
 }
