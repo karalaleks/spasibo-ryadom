@@ -247,7 +247,19 @@ body:has(.form-dialog[open]) { overflow: hidden; }
   pointer-events: none;
 }
 .board { padding: clamp(2.25rem, 4.4vw, 3.95rem) 1.25rem clamp(2rem, 4vw, 3.5rem); scroll-margin-top: 1rem; }
-.board:focus-visible h2 { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: .2em; }
+.board:focus { outline: none; }
+.board h2::after {
+  content: "";
+  display: block;
+  inline-size: 2.75rem;
+  margin-block-start: .65rem;
+  border-top: .1875rem solid #c2754e;
+  border-radius: 999px;
+}
+.board:focus-visible h2::after {
+  inline-size: 3.5rem;
+  border-color: var(--accent);
+}
 h2 {
   margin: 0 0 1.5rem;
   font-size: clamp(1.95rem, 3.45vw, 3.05rem);
