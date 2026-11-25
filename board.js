@@ -31,7 +31,7 @@ function showMessages(messages) {
     );
     if (entry.from) item.append(element("p", `От кого: ${entry.from}`, "byline"));
   });
-  document.getElementById("messages").replaceChildren(list);
+  messagesContainer.replaceChildren(list);
 }
 
 function showClosingDetails({ total, stories }) {
@@ -83,14 +83,27 @@ const publicFeedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRfgxCn2D
 const localResults = fetch("results.json", { cache: "no-cache" })
   .then(response => response.ok ? response.json() : null)
   .catch(() => null);
-let publicMessages = [];
+const feedCacheKey = "spasibo-ryadom.public-feed.v1";
+const feedCacheLifetime = 5 * 60 * 1000;
+const messagesContainer = document.getElementById("messages");
+const emptyMessage = document.getElementById("board-empty");
+const emptyState = emptyMessage.parentElement;
+const defaultEmptyMessage = emptyMessage.textContent;
+
+let publicFeed = readCachedFeed();
+let smallerFeedKey = null;
 let boardRefreshing = false;
+let lastRenderKey;
 
 function parsePublicFeed(csv) {
   const rows = [];
   let row = [];
   const fields = /("(?:[^"]|"")*"|[^",\r\n]*)(,|\r\n|\n|\r|$)/gy;
-  for (const [, raw, separator] of csv.replace(/^\uFEFF/, "").matchAll(fields)) {
+  const source = csv.replace(/^\uFEFF/, "");
+  let consumed = 0;
+  for (const match of source.matchAll(fields)) {
+    const [, raw, separator] = match;
+    consumed = match.index + match[0].length;
     row.push(raw.startsWith('"') ? raw.slice(1, -1).replace(/""/g, '"') : raw);
     if (separator !== ",") {
       if (row.some(value => value.trim())) rows.push(row);
@@ -98,39 +111,111 @@ function parsePublicFeed(csv) {
     }
   }
 
+  if (consumed !== source.length || rows.some(row => row.length !== 3)) {
+    throw new Error("The gratitude feed returned an incomplete CSV");
+  }
+
   const header = rows.shift();
   if (header?.join(",") !== "Кому,От кого,Благодарность") {
     throw new Error("The gratitude feed returned an unexpected header");
   }
   return rows.reverse()
-    .filter(row => row.length === 3 && row.every(value => value.trim()))
+    .filter(row => row.every(value => value.trim()))
     .map(([to, from, text]) => ({ to, from, text }));
+}
+
+function feedIsRecent(feed) {
+  const age = Date.now() - feed?.checkedAt;
+  return age >= 0 && age < feedCacheLifetime;
+}
+
+function readCachedFeed() {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(feedCacheKey));
+    if (feedIsRecent(cached) && typeof cached.csv === "string") {
+      return { checkedAt: cached.checkedAt, messages: parsePublicFeed(cached.csv) };
+    }
+  } catch {
+    // Storage is optional, including in browsers that block it.
+  }
+  return null;
+}
+
+function updatePublicFeed(csv) {
+  const messages = parsePublicFeed(csv);
+  const key = JSON.stringify(messages);
+  if (feedIsRecent(publicFeed) && messages.length < publicFeed.messages.length &&
+      smallerFeedKey !== key) {
+    // Google can alternate between current and older published snapshots.
+    smallerFeedKey = key;
+    return;
+  }
+
+  const checkedAt = Date.now();
+  publicFeed = { messages, checkedAt };
+  smallerFeedKey = null;
+  try {
+    sessionStorage.setItem(feedCacheKey, JSON.stringify({ csv, checkedAt }));
+  } catch {
+    // The current tab can still render the feed without storage.
+  }
+}
+
+function renderBoard(results, status = "") {
+  const recentMessages = feedIsRecent(publicFeed) ? publicFeed.messages : [];
+  const staticMessages = Array.isArray(results?.messages) ? results.messages : [];
+  const messages = [...recentMessages, ...staticMessages];
+  const renderKey = JSON.stringify([messages, status]);
+  if (renderKey === lastRenderKey) return;
+  lastRenderKey = renderKey;
+
+  if (messages.some(entry => entry?.to && entry?.text)) {
+    showMessages(messages);
+    if (status) messagesContainer.append(element("p", status, "empty"));
+  } else {
+    emptyMessage.textContent = status || defaultEmptyMessage;
+    messagesContainer.replaceChildren(emptyState);
+  }
 }
 
 async function refreshBoard() {
   if (boardRefreshing) return;
   boardRefreshing = true;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let status = "";
   try {
-    const response = await fetch(publicFeedUrl, {
+    const url = new URL(publicFeedUrl);
+    url.searchParams.set("_board", String(Date.now()));
+    const response = await fetch(url, {
       cache: "no-store",
       credentials: "omit",
-      signal: AbortSignal.timeout(8000),
+      signal: controller.signal,
     });
     if (!response.ok) throw new Error("Could not load the public gratitude feed");
-    publicMessages = parsePublicFeed(await response.text());
+    updatePublicFeed(await response.text());
   } catch (error) {
+    smallerFeedKey = null;
+    if (!feedIsRecent(publicFeed)) {
+      status = "Не удалось обновить ленту. Попробуем снова автоматически.";
+    }
     console.warn("Публичная лента благодарностей временно недоступна.", error);
   } finally {
+    clearTimeout(timeout);
+    renderBoard(await localResults, status);
     boardRefreshing = false;
   }
-  const results = await localResults;
-  showMessages([...publicMessages, ...(results?.messages ?? [])]);
+}
+
+if (feedIsRecent(publicFeed)) {
+  renderBoard(null);
+} else {
+  emptyMessage.textContent = "Загружаем благодарности…";
 }
 
 localResults.then(results => {
-  if (!results) return;
-  showMessages([...publicMessages, ...(results.messages ?? [])]);
-  if (campaignEnded) showClosingDetails(results);
+  if (results && campaignEnded) showClosingDetails(results);
+  if (feedIsRecent(publicFeed)) renderBoard(results);
 });
 
 refreshBoard();
