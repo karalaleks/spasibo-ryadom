@@ -316,21 +316,8 @@ body:has(.form-dialog[open]) { overflow: hidden; }
   mask-image: radial-gradient(ellipse at 0% 96%, #000 40%, transparent 79%);
 }
 .board {
-  position: relative;
-  isolation: isolate;
   padding: clamp(2.25rem, 4.4vw, 3.95rem) 1.25rem clamp(2rem, 4vw, 3.5rem);
   scroll-margin-top: 1rem;
-}
-.board::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: .5rem 0 auto auto;
-  inline-size: clamp(5rem, 14vw, 11rem);
-  block-size: clamp(2rem, 6vw, 5rem);
-  background: url("assets/postcard-line.webp") right center / contain no-repeat;
-  opacity: .65;
-  pointer-events: none;
 }
 .board:focus { outline: none; }
 .board h2::after {
@@ -488,7 +475,6 @@ h2 {
 @media (max-width: 560px) {
   .hero::before { opacity: .36; }
   .board-area::after { opacity: .34; }
-  .board::before { opacity: .28; }
   .form-dialog {
     width: calc(100% - 1rem);
     max-height: calc(100vh - 1rem);
