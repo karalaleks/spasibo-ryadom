@@ -1,13 +1,26 @@
 @font-face {
-  font-family: "Noto Display";
-  src: url("assets/display-regular.woff") format("woff");
+  font-family: "Nunito Sans";
+  src: url("assets/nunito-sans-regular.woff") format("woff");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Display";
-  src: url("assets/display-bold.woff") format("woff");
+  font-family: "Nunito Sans";
+  src: url("assets/nunito-sans-bold.woff") format("woff");
   font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lora";
+  src: url("assets/lora-semibold.woff") format("woff");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lora";
+  src: url("assets/lora-semibold-italic.woff") format("woff");
+  font-style: italic;
+  font-weight: 600;
   font-display: swap;
 }
 
@@ -19,7 +32,8 @@
   --orange: #f79539;
   --cream: #fff8ed;
   --canvas: #fcf5e9;
-  font-family: "Noto Display", Arial, sans-serif;
+  --heading-font: "Lora", Georgia, serif;
+  font-family: "Nunito Sans", Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -137,20 +151,21 @@ nav a:hover { color: var(--accent); text-decoration: underline; text-underline-o
 .campaign-dates time { white-space: nowrap; }
 h1 {
   margin: 0 0 1.6rem;
-  font-size: clamp(4.4rem, 7.25vw, 6.5rem);
-  font-weight: 700;
-  line-height: .9;
-  letter-spacing: -.065em;
+  font-family: var(--heading-font);
+  font-size: clamp(3.65rem, 6.6vw, 6.1rem);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.04em;
 }
 .hero-nearby {
   display: flex;
   align-items: center;
-  gap: .17em;
-  margin-top: .16em;
+  gap: .23em;
+  margin-top: .09em;
   color: var(--accent);
   font-size: .96em;
-  font-weight: 400;
-  letter-spacing: -.045em;
+  font-style: italic;
+  letter-spacing: -.035em;
 }
 .hero-heart {
   display: grid;
@@ -300,7 +315,23 @@ body:has(.form-dialog[open]) { overflow: hidden; }
   opacity: .52;
   mask-image: radial-gradient(ellipse at 0% 96%, #000 40%, transparent 79%);
 }
-.board { padding: clamp(2.25rem, 4.4vw, 3.95rem) 1.25rem clamp(2rem, 4vw, 3.5rem); scroll-margin-top: 1rem; }
+.board {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(2.25rem, 4.4vw, 3.95rem) 1.25rem clamp(2rem, 4vw, 3.5rem);
+  scroll-margin-top: 1rem;
+}
+.board::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: .5rem 0 auto auto;
+  inline-size: clamp(5rem, 14vw, 11rem);
+  block-size: clamp(2rem, 6vw, 5rem);
+  background: url("assets/postcard-line.webp") right center / contain no-repeat;
+  opacity: .65;
+  pointer-events: none;
+}
 .board:focus { outline: none; }
 .board h2::after {
   content: "";
@@ -316,9 +347,11 @@ body:has(.form-dialog[open]) { overflow: hidden; }
 }
 h2 {
   margin: 0 0 1.5rem;
-  font-size: clamp(1.95rem, 3.45vw, 3.05rem);
-  line-height: 1.08;
-  letter-spacing: -.042em;
+  font-family: var(--heading-font);
+  font-size: clamp(1.85rem, 3.45vw, 2.85rem);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -.025em;
 }
 .empty {
   display: flex;
@@ -353,8 +386,8 @@ h2 {
   background: #fffbf1;
   box-shadow: inset 0 1px #ffffff80, 0 .6rem 1.35rem -.55rem #5f482733;
 }
-.message-list li:nth-child(3n + 2) { border-color: #d6ddca; background: #e9eedf; }
-.message-list li:nth-child(3n + 3) { border-color: #ecd1bd; background: #fae7d8; }
+.message-list li:nth-child(3n + 2) { border-color: #d6ddca; background-color: #e9eedf; }
+.message-list li:nth-child(3n + 3) { border-color: #ecd1bd; background-color: #fae7d8; }
 .message-list li::after {
   content: "";
   position: absolute;
@@ -374,6 +407,8 @@ h2 {
   gap: .85rem;
   min-height: 11.5rem;
   padding: clamp(1.2rem, 2.6vw, 1.85rem);
+  background-image: url("assets/paper-grain.webp");
+  background-blend-mode: soft-light;
 }
 .card-heading {
   margin: 0 2.85rem 0 0;
@@ -439,7 +474,7 @@ h2 {
   .shell { width: calc(100% - 2rem); }
   .hero { grid-template-columns: 1fr; margin-top: 1rem; border-radius: 1.25rem; }
   .hero-copy { padding: clamp(1.25rem, 6vw, 3rem); }
-  h1 { font-size: clamp(3.45rem, 11vw, 6rem); }
+  h1 { font-size: clamp(3.1rem, 10.5vw, 5.85rem); }
   .hero-art { aspect-ratio: 1.15; margin: -.65rem 0 0; }
   .hero-art img { object-position: center; mask-image: linear-gradient(180deg, transparent, #000 21%); }
 }
@@ -453,6 +488,7 @@ h2 {
 @media (max-width: 560px) {
   .hero::before { opacity: .36; }
   .board-area::after { opacity: .34; }
+  .board::before { opacity: .28; }
   .form-dialog {
     width: calc(100% - 1rem);
     max-height: calc(100vh - 1rem);
