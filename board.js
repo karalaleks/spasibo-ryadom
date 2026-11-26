@@ -1,6 +1,6 @@
 "use strict";
 
-const campaignEnd = Date.parse("2026-12-09T00:00:00+03:00");
+const campaignEnd = Date.parse("2026-12-12T00:00:00+03:00");
 const campaignEnded = Date.now() >= campaignEnd;
 
 function element(tag, text, className) {
