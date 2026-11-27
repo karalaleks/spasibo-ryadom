@@ -141,7 +141,8 @@ function showMessages(messages) {
   if (!publishableMessages.length) return;
   const list = makeList(publishableMessages, "message-list", (item, entry) => {
     const header = element("header");
-    header.append(element("h3", inflectPersonName(entry.to, "dative"), "card-heading"));
+    const recipient = entry.to.replace(/(?<!\p{L})(Мавиле\s+)Усеиновна(?!\p{L})/gu, "$1Усеиновне");
+    header.append(element("h3", inflectPersonName(recipient, "dative"), "card-heading"));
     if (entry.unit) header.append(element("p", entry.unit, "recipient-unit"));
     item.append(header, element("p", entry.text, "message-text"));
     if (entry.from) item.append(element("p", `От кого: ${inflectPersonName(entry.from, "genitive")}`, "byline"));
