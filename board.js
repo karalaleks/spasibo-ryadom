@@ -31,8 +31,8 @@ const namesByGender = {
     Маргарита:Маргарите Марина:Марине Мария:Марии Милана:Милане Надежда:Надежде Наталия:Наталии
     Наталья:Наталье Нина:Нине Оксана:Оксане Олеся:Олесе Ольга:Ольге Полина:Полине Раиса:Раисе
     Регина:Регине Светлана:Светлане София:Софии Софья:Софье Тамара:Тамаре Татьяна:Татьяне Ульяна:Ульяне
-    Элина:Элине Эльвира:Эльвире Эльнара:Эльнаре Юлия:Юлии Яна:Яне
-    Аня:Ане Даша:Даше Катя:Кате Лена:Лене Маша:Маше Наташа:Наташе Оля:Оле Света:Свете Таня:Тане Юля:Юле`,
+    Элина:Элине Эльвира:Эльвире Эльнара:Эльнаре Юлия:Юлии Яна:Яне Асель:Асель Марьям:Марьям Сабрие:Сабрие
+    Аня:Ане Даша:Даше Катя:Кате Лена:Лене Лиличка:Лиличке Маша:Маше Наташа:Наташе Оля:Оле Олечка:Олечке Света:Свете Таня:Тане Юля:Юле`,
   male: `Александр:Александру Алексей:Алексею Анатолий:Анатолию Андрей:Андрею Антон:Антону Аркадий:Аркадию
     Арсений:Арсению Артём:Артёму Артем:Артему Артур:Артуру Борис:Борису Вадим:Вадиму Валентин:Валентину
     Валерий:Валерию Василий:Василию Виктор:Виктору Виталий:Виталию Владимир:Владимиру Владислав:Владиславу
@@ -41,7 +41,7 @@ const namesByGender = {
     Илья:Илье Кирилл:Кириллу Константин:Константину Лев:Льву Леонид:Леониду Максим:Максиму
     Матвей:Матвею Михаил:Михаилу Никита:Никите Николай:Николаю Олег:Олегу Павел:Павлу Пётр:Петру
     Петр:Петру Роман:Роману Руслан:Руслану Семён:Семёну Семен:Семену Сергей:Сергею Станислав:Станиславу
-    Степан:Степану Тимофей:Тимофею Фёдор:Фёдору Федор:Федору Юрий:Юрию Ярослав:Ярославу
+    Степан:Степану Тимофей:Тимофею Фёдор:Фёдору Федор:Федору Эльдар:Эльдару Юрий:Юрию Ярослав:Ярославу
     Дима:Диме Коля:Коле Лёша:Лёше Леша:Леше Миша:Мише Паша:Паше Петя:Пете
     Серёжа:Серёже Сережа:Сереже Тёма:Тёме`,
 };
@@ -72,21 +72,44 @@ function genitiveGivenName(given, dative) {
   return dative;
 }
 
-const familyNameEndings = {
-  female: [
-    [/(?:ова|ева|ёва|ина|ына)$/, 1, "ой", "ой"],
-    [/(?:ская|цкая)$/, 2, "ой", "ой"],
-    [/(?:овна|евна|ёвна|инична|ична)$/, 1, "е", "ы"],
-  ],
-  male: [
-    [/(?:ский|цкий)$/, 2, "ому", "ого"],
-    [/(?:ов|ев|ёв|ин|ын|вич)$/, 0, "у", "а"],
-  ],
-};
+const obliqueGivenNames = new Map();
+for (const [given, name] of givenNames) {
+  for (const form of new Set([name.dative, genitiveGivenName(given, name.dative)])) {
+    if (givenNames.has(form)) continue;
+    const previous = obliqueGivenNames.get(form);
+    obliqueGivenNames.set(form, previous && previous.gender !== name.gender ? { gender: null } : name);
+  }
+}
 
-function inflectFamilyNamePart(part, gender, nameCase) {
+const femaleFamilyEndings = [
+  [/(?:овна|евна|ёвна|инична|ична)$/, 1, "е", "ы"],
+  [/(?:ова|ева|ёва|ина|ына)$/, 1, "ой", "ой"],
+  [/(?:яя|[жчшщ]ая)$/, 2, "ей", "ей"],
+  [/ая$/, 2, "ой", "ой"],
+];
+
+const maleFamilyEndings = [
+  [/(?:[гкх]ий|ый|ой)$/, 2, "ому", "ого"],
+  [/ий$/, 2, "ему", "его"],
+  [/[ьй]$/, 1, "ю", "я"],
+  [/[бвгджзклмнпрстфхцчшщ]$/, 0, "у", "а"],
+];
+
+const indeclinableVowelSurnames = new Set(["дюма", "золя", "делакруа", "дега", "ферма"]);
+const vowelFamilyEndings = [
+  [/ия$/, 1, "и", "и"],
+  [/я$/, 1, "е", "и"],
+  [/[гкхжчшщ]а$/, 1, "е", "и"],
+  [/[бвдзлмнпрстфц]а$/, 1, "е", "ы"],
+];
+
+function inflectFamilyNamePart(part, gender, nameCase, givenAlreadyInflected) {
   const lower = part.toLowerCase();
-  const ending = familyNameEndings[gender].find(([pattern]) => pattern.test(lower));
+  if (/(?:ых|их)$/.test(lower) || indeclinableVowelSurnames.has(lower)) return part;
+  // After a declined male given name, -а or -я may already be a genitive ending.
+  const commonEndings = gender === "male" && givenAlreadyInflected ? [] : vowelFamilyEndings;
+  const endings = gender === "female" ? femaleFamilyEndings : maleFamilyEndings;
+  const ending = [...endings, ...commonEndings].find(([pattern]) => pattern.test(lower));
   if (!ending) return part;
   const [, trim, dative, genitive] = ending;
   const suffix = nameCase === "genitive" ? genitive : dative;
@@ -96,16 +119,19 @@ function inflectFamilyNamePart(part, gender, nameCase) {
 function inflectPersonName(personName, nameCase) {
   const parts = personName.trim().split(/\s+/);
   if (parts.length > 3 || !parts.every(part => /^[а-яё]+(?:-[а-яё]+)*\.?$/iu.test(part))) return personName;
-  const knownNames = parts.map(part => givenNames.get(part.toLowerCase()));
+  const lowerParts = parts.map(part => part.toLowerCase());
+  let knownNames = lowerParts.map(part => givenNames.get(part));
+  const givenAlreadyInflected = !knownNames.some(Boolean);
+  if (givenAlreadyInflected) knownNames = lowerParts.map(part => obliqueGivenNames.get(part));
   if (knownNames.filter(Boolean).length !== 1) return personName;
   const nameIndex = knownNames.findIndex(Boolean);
   const name = knownNames[nameIndex];
-  const given = parts[nameIndex].toLowerCase();
+  const given = lowerParts[nameIndex];
   const inflected = nameCase === "genitive" ? genitiveGivenName(given, name.dative) : name.dative;
   return parts.map((part, index) => {
-    if (index === nameIndex) return preserveCapitalization(part, inflected);
+    if (index === nameIndex) return givenAlreadyInflected ? part : preserveCapitalization(part, inflected);
     if (!name.gender) return part;
-    return part.split("-").map(word => inflectFamilyNamePart(word, name.gender, nameCase)).join("-");
+    return part.split("-").map(word => inflectFamilyNamePart(word, name.gender, nameCase, givenAlreadyInflected)).join("-");
   }).join(" ");
 }
 
